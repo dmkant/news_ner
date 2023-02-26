@@ -96,8 +96,8 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
     )
 
     top_container = st.container()
-    top_col1,top_col2 = top_container.columns([1,3])
-    top_col1.markdown(f"<h4> Nombre d'articles</h4> <h3 style='color: red;'> {df_article.shape[0]} <h3>",unsafe_allow_html=True)
+    top_col1,top_col2 = top_container.columns([2,5])
+    top_col1.markdown(f"<h4> Nombre d'articles</h4> <h2 style='color: red;'> {df_article.shape[0]} <h/2>",unsafe_allow_html=True)
 
 
     top_col1.write("Sources des articles:")
@@ -248,7 +248,7 @@ for i in range(df_entity_relation_filter.shape[0]):
                     ) 
                 ) 
 
-config = Config(height=900, width=900, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=False,collapsible=True)
+config = Config(height=900, width=1000, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=False,collapsible=True)
 
 print("wsh")
 resu_graph = agraph(nodes=nodes, 
