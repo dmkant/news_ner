@@ -1,7 +1,7 @@
 feedparser==6.0.10
 ipython==8.10.0
 newspaper3k==0.2.8
-newspaper==0.1.0.7
+# newspaper==0.1.0.7
 numpy==1.23.5
 pandas==1.5.2
 plotly==5.11.0
