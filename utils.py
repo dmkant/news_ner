@@ -16,6 +16,7 @@ from spacy.tokens import DocBin
 import streamlit as st
 from sklearn.cluster import KMeans
 import wikipedia
+import colorsys
 
 def get_html(html: str):
     """Convert HTML so it can be rendered."""
@@ -23,6 +24,15 @@ def get_html(html: str):
     # Newlines seem to mess with the rendering
     html = html.replace("\n", " ")
     return WRAPPER.format(html)
+
+
+def get_N_HexCol(N=5):
+    HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
+    hex_out = []
+    for rgb in HSV_tuples:
+        rgb = map(lambda x: int(x * 255), colorsys.hsv_to_rgb(*rgb))
+        hex_out.append('#%02x%02x%02x' % tuple(rgb))
+    return hex_out
 
 # IMPORTATION
 def extract_url_first_part(url: str) -> str:
@@ -118,6 +128,8 @@ def get_main_entity(
 ###################### Add wikipedia 
 def ajout_wikipedia_article(df_main_entity: pd.DataFrame) -> pd.DataFrame:
     list_article = []
+    wikipedia.set_lang("fr")
+
     for entite_lemma in tqdm(df_main_entity[df_main_entity["type"]!="MISC"]["lemma"]):
         try:
             wiki_search = wikipedia.search(entite_lemma,results=1)
