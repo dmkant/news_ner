@@ -142,7 +142,7 @@ def ajout_wikipedia_article(df_main_entity: pd.DataFrame) -> pd.DataFrame:
 def get_df_sent_entity(df_article: pd.DataFrame) -> pd.DataFrame:
     list_sent = [
         {
-            "num_doc": num_doc,
+            "num_doc": df_article.index[num_doc],
             "source": df_article["source"].iloc[num_doc],
             "url": df_article["url"].iloc[num_doc],
             "sent": sent,

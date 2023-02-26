@@ -189,10 +189,12 @@ df_sent_entity_is_not_None = df_sent_entity is not None
 print(df_main_entity)
 
 @st.cache_resource
-def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None):
+def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape):
     # Relations Journeaux
     # Get Entity
     if df_sent_entity_is_not_None:
+        print("ok")
+        print(df_sent_entity["source"].unique())
         df_entity_relation_newspaper = get_entity_relation(
             df_sent_entity=df_sent_entity[df_sent_entity["source"] != "Wikipedia"],
             type_entite1_filter=type_entite1_filter,
@@ -257,8 +259,8 @@ def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filte
     else:
         return None
 
-
-df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None)
+df_sent_entity_shape = df_sent_entity.shape if df_sent_entity is not None else (0,0)
+df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape)
 
 
 ######################################### Graphe
