@@ -1,3 +1,5 @@
+[global]
+dataFrameSerialization = "legacy"
 
 [server]
 runOnSave = true
