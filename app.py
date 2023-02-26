@@ -1,6 +1,5 @@
 import streamlit as st
 from utils import *
-from preprocess import *
 import spacy
 import os
 from streamlit_agraph import agraph, Node, Edge, Config
