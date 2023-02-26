@@ -3,10 +3,11 @@ from utils import *
 import spacy
 import os
 from streamlit_agraph import agraph, Node, Edge, Config
+# from layout import footer
 
 ENT_COLOR = {"PER":"#4D9DE0","LOC":"#E15554","ORG":"#E1BC29","MISC":"#3BB273"}
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",page_title='ENSAI - NER Project')
 
 nlp = spacy.load("fr_core_news_md")
 
@@ -46,6 +47,43 @@ df_newspaper_article = fetch_data()
 
 st.markdown("<h1 style='text-align: center; color: red;'>Analyse des Entités Nommées dans la presse</h1>", unsafe_allow_html=True)
 st.subheader("Reconnaissance des Entités Nommées")
+# footer()
+
+footer="""<style>
+a:link , a:visited{
+background-color: transparent;
+text-decoration: underline;
+}
+
+a:hover,  a:active {
+color: red;
+background-color: transparent;
+text-decoration: underline;
+}
+
+.footer {
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+background-color: rgb(249 244 244);
+color: black;
+text-align: center;
+z-index: 1
+}
+</style>
+<div class="footer">
+<img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Logo_ENSAI_2014.svg/1280px-Logo_ENSAI_2014.svg.png" style='width: 7%;
+top: 10%;
+    left: 13px;
+    position: absolute;'>
+<img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Logo_ENSAI_2014.svg/1280px-Logo_ENSAI_2014.svg.png" style='width: 7%;top: 10%;
+    right: 13px;
+    position: absolute;'>
+<p>Developpé par <a style='display: block; text-align: center;' href="https://www.dominos.fr/"> Le Bayon et Miccinilli </a></p>
+</div>
+"""
+st.markdown(footer,unsafe_allow_html=True)
 
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
@@ -211,7 +249,18 @@ df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filt
 ######################################### Graphe
 
 st.subheader("Extraction des Relations")
-
+st.markdown("""<div> On représente les rélations entre entités par un graphe où les noeuds sont les entités et les arrètes les relations. 
+            La couleur de noeuds correspond à leur type (<span style="color:#4D9DE0;font-weight: bold;">PER</span>, <span style="font-weight: bold;color:#E15554">LOC</span> et <span style="font-weight: bold;color:#E1BC29">ORG</span>).
+            Concernant les arrêtes: 
+            <ul> 
+            <li> Le style correspond à la source (hashé pour Wikipedia et continue pour les article)</li> 
+            <li> L'éppaisseur correspond à l'occurence de la relation dans le corpus</li> 
+            <li> La couleur correpond au cluster où sont regrouper des relations similaire</li> 
+            </ul>
+            <span style="font-weight: bold;">En cliquant sur un noeud, on accède aux différentes sources utilisé pour son extraction.</span>
+            </div>""",
+            
+            unsafe_allow_html=True)
 
 nodes = []
 edges = []
@@ -259,12 +308,15 @@ resu_graph = agraph(nodes=nodes,
 if resu_graph:
     with st.expander("",expanded=True):
         st.subheader(f"Sources de l'extraction des relations liées à l'entité '{resu_graph}'")
+        all_sent = [()]
         for list_num_phrase in df_entity_relation_filter.loc[(df_entity_relation_filter["entite1"]==resu_graph) | (df_entity_relation_filter["entite2"]==resu_graph),"num_phrase"]:
             for i in list_num_phrase:
-                html = spacy.displacy.render(df_sent_entity.loc[i,"sent"], style="ent", options={ "colors": ENT_COLOR})
-                style = "<style>mark.entity { display: inline-block }</style>"
-                st.write(f"{style}{get_html(html)}", unsafe_allow_html=True)
-                st.markdown(f"{df_sent_entity.loc[i,'source']}: {df_sent_entity.loc[i,'url']}", unsafe_allow_html=True)
+                if (df_sent_entity.loc[i,"sent"].text,df_sent_entity.loc[i,'url']) not in all_sent:
+                    all_sent.append((df_sent_entity.loc[i,"sent"].text,df_sent_entity.loc[i,'url']))
+                    html = spacy.displacy.render(df_sent_entity.loc[i,"sent"], style="ent", options={ "colors": ENT_COLOR})
+                    style = "<style>mark.entity { display: inline-block }</style>"
+                    st.write(f"{style}{get_html(html)}", unsafe_allow_html=True)
+                    st.markdown(f"{df_sent_entity.loc[i,'source']}: {df_sent_entity.loc[i,'url']}", unsafe_allow_html=True)
 
 
 
