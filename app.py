@@ -80,7 +80,7 @@ top: 10%;
 <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Logo_ENSAI_2014.svg/1280px-Logo_ENSAI_2014.svg.png" style='width: 7%;top: 10%;
     right: 13px;
     position: absolute;'>
-<p>Developpé par <a style='display: block; text-align: center;' href="https://www.dominos.fr/"> Le Bayon et Miccinilli </a></p>
+<p>Developpée par <a style='display: block; text-align: center;' href="https://www.dominos.fr/"> Le Bayon et Miccinilli </a></p>
 </div>
 """
 st.markdown(footer,unsafe_allow_html=True)
