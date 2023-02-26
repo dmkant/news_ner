@@ -11,4 +11,4 @@ streamlit==1.19.0
 tqdm==4.64.1
 wikipedia==1.4.0
 
-fr_core_news_md @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-2.0.0/fr_core_news_md-2.0.0-py3-none-any.whl
+fr_core_news_md @ https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.5.0/fr_core_news_md-3.5.0-py3-none-any.whl
