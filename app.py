@@ -13,6 +13,7 @@ nlp = spacy.load("fr_core_news_md")
 
 @st.cache_resource
 def fetch_data():
+    my_bar = st.progress(0, text=f"Récuperation des flux RSS....")
     # Initialisation
     with open("data/sources.json") as mon_fichier:
         dict_sources = json.load(mon_fichier)
@@ -41,9 +42,20 @@ def fetch_data():
     # Detection entite
     df_newspaper_article["entity"] = df_newspaper_article["docs"].apply(lambda x: x.ents)
     
-    return df_newspaper_article
+    my_bar.progress(0.4, text="Ajout de pages Wikipedia...")
+    df_main_entity = get_main_entity( N_most_common=20, df_article=df_newspaper_article)
+    df_wikipedia_article = ajout_wikipedia_article(df_main_entity=df_main_entity)
+    # Application de la pipeline
+    res_pipe = nlp.pipe(df_wikipedia_article["content"])
+    df_wikipedia_article["docs"] = [doc for doc in res_pipe]
+    df_wikipedia_article["entity"] = df_wikipedia_article["docs"].apply(lambda x: x.ents)
+    
+    my_bar.progress(1, text="Done !")
+    my_bar.empty()
+        
+    return df_newspaper_article,df_wikipedia_article
 
-df_newspaper_article = fetch_data()
+df_newspaper_article,df_wikipedia_article = fetch_data()
 
 st.markdown("<h1 style='text-align: center; color: red;'>Analyse des Entités Nommées dans la presse</h1>", unsafe_allow_html=True)
 st.subheader("Reconnaissance des Entités Nommées")
@@ -127,123 +139,126 @@ nb_cluster =  st.sidebar.number_input("Nombre de cluster regroupant les relation
 
 @st.cache_resource
 def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
+    my_bar = st.progress(0.1, text="Filtrer le corpus....")
     df_article = filter_article(
         df_all_article=df_newspaper_article,
         source_filter=source_filter,
         category_filter=category_filter,
     )
-
+    
     top_container = st.container()
     top_col1,top_col2 = top_container.columns([2,5])
     top_col1.markdown(f"<h4> Nombre d'articles</h4> <h2 style='color: red;'> {df_article.shape[0]} <h/2>",unsafe_allow_html=True)
 
 
     top_col1.write("Sources des articles:")
-    for img_file in os.listdir("data/img/sources"):
-        top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
-        top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
-        top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
-        top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
+    for _ in range(2):
+        for img_file in os.listdir("data/img/sources"):
+            top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
 
+    if df_article.shape[0] > 0:
+        my_bar.progress(0.15, text=f"Récupère les {nb_max_entite_filter} entités principales par type....")
+        df_main_entity = get_main_entity( N_most_common=nb_max_entite_filter, df_article=df_article)
+        fig = px.bar(
+            df_main_entity.iloc[::-1].rename(columns={"lemma": "entité"}),
+            y="entité",
+            x="occurence",
+            color="type",
+            color_discrete_map=ENT_COLOR,
+            width=1000,
+            height=900,
+            title="Occurence des entités dans les articles selon leur type",
+        )
+        top_col2.plotly_chart(fig,use_container_width=True)
 
+        df_article = pd.concat([df_article, df_wikipedia_article])
 
-    df_main_entity = get_main_entity( N_most_common=nb_max_entite_filter, df_article=df_article)
-    fig = px.bar(
-        df_main_entity.iloc[::-1].rename(columns={"lemma": "entité"}),
-        y="entité",
-        x="occurence",
-        color="type",
-        color_discrete_map=ENT_COLOR,
-        width=1000,
-        height=900,
-        title="Occurence des entités dans les articles selon leur type",
-    )
-    top_col2.plotly_chart(fig,use_container_width=True)
-
-
-
-    df_wikipedia_article = ajout_wikipedia_article(df_main_entity=df_main_entity)
-    # Application de la pipeline
-    res_pipe = nlp.pipe(df_wikipedia_article["content"])
-    df_wikipedia_article["docs"] = [doc for doc in res_pipe]
-    df_wikipedia_article["entity"] = df_wikipedia_article["docs"].apply(lambda x: x.ents)
-    df_article = pd.concat([df_article, df_wikipedia_article])
-
-    # Sent entity
-    df_sent_entity = get_df_sent_entity(df_article=df_article)
-    
-    return df_main_entity,df_sent_entity
+        # Sent entity
+        df_sent_entity = get_df_sent_entity(df_article=df_article)
+        my_bar.progress(1, text="Done !")
+        my_bar.empty()
+        
+        return df_main_entity,df_sent_entity
+    else:
+        my_bar.empty()
+        return None,None
+        
 
 df_main_entity,df_sent_entity = display_main_kpi(source_filter,category_filter,nb_max_entite_filter)
+df_sent_entity_is_not_None = df_sent_entity is not None
+print(df_main_entity)
 
 @st.cache_resource
-def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster):
+def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None):
     # Relations Journeaux
     # Get Entity
-    df_entity_relation_newspaper = get_entity_relation(
-        df_sent_entity=df_sent_entity[df_sent_entity["source"] != "Wikipedia"],
-        type_entite1_filter=type_entite1_filter,
-        type_entite2_filter=type_entite2_filter,
-    )
-    
-    df_entity_relation_newspaper = df_entity_relation_newspaper[
-        (df_entity_relation_newspaper["entite1"].isin(df_main_entity["lemma"]))
-        & (df_entity_relation_newspaper["entite2"].isin(df_main_entity["lemma"]))
-    ]
-    
-    # Filter
-    df_entity_relation_filter = (
-        df_entity_relation_newspaper.groupby(["type1", "entite1", "relation", "entite2", "type2"])
-        .aggregate(**{"num_phrase": ("num_phrase", list), "occurence": ("num_phrase", len)})
-        .reset_index()
-        .sort_values("occurence", ascending=False,ignore_index=True)
-        .head(nb_max_relation_filter)
-    )
+    if df_sent_entity_is_not_None:
+        df_entity_relation_newspaper = get_entity_relation(
+            df_sent_entity=df_sent_entity[df_sent_entity["source"] != "Wikipedia"],
+            type_entite1_filter=type_entite1_filter,
+            type_entite2_filter=type_entite2_filter,
+        )
+        
+        df_entity_relation_newspaper = df_entity_relation_newspaper[
+            (df_entity_relation_newspaper["entite1"].isin(df_main_entity["lemma"]))
+            & (df_entity_relation_newspaper["entite2"].isin(df_main_entity["lemma"]))
+        ]
+        
+        # Filter
+        df_entity_relation_filter = (
+            df_entity_relation_newspaper.groupby(["type1", "entite1", "relation", "entite2", "type2"])
+            .aggregate(**{"num_phrase": ("num_phrase", list), "occurence": ("num_phrase", len)})
+            .reset_index()
+            .sort_values("occurence", ascending=False,ignore_index=True)
+            .head(nb_max_relation_filter)
+        )
 
 
-    #Relation Wikipideia
-    df_entity_relation_wiki = get_entity_relation(
-        df_sent_entity=df_sent_entity[df_sent_entity["source"] == "Wikipedia"],
-        type_entite1_filter=type_entite1_filter,
-        type_entite2_filter=type_entite2_filter,
-    )
+        #Relation Wikipideia
+        df_entity_relation_wiki = get_entity_relation(
+            df_sent_entity=df_sent_entity[df_sent_entity["source"] == "Wikipedia"],
+            type_entite1_filter=type_entite1_filter,
+            type_entite2_filter=type_entite2_filter,
+        )
 
 
-    df_entity_relation_wiki = df_entity_relation_wiki[(df_entity_relation_wiki["entite1"].isin(df_entity_relation_filter["entite1"])) 
-                                                  | (df_entity_relation_wiki["entite1"].isin(df_entity_relation_filter["entite2"]))
-                                                  | (df_entity_relation_wiki["entite2"].isin(df_entity_relation_filter["entite1"])) 
-                                                  | (df_entity_relation_wiki["entite2"].isin(df_entity_relation_filter["entite2"]))]
+        df_entity_relation_wiki = df_entity_relation_wiki[(df_entity_relation_wiki["entite1"].isin(df_entity_relation_filter["entite1"])) 
+                                                    | (df_entity_relation_wiki["entite1"].isin(df_entity_relation_filter["entite2"]))
+                                                    | (df_entity_relation_wiki["entite2"].isin(df_entity_relation_filter["entite1"])) 
+                                                    | (df_entity_relation_wiki["entite2"].isin(df_entity_relation_filter["entite2"]))]
 
-    # Filter
-    df_entity_relation_wiki_filter = (
-        df_entity_relation_wiki.groupby(["type1", "entite1", "relation", "entite2", "type2"])
-        .aggregate(**{"num_phrase": ("num_phrase", list), "occurence": ("num_phrase", len)})
-        .reset_index()
-        .sort_values("occurence", ascending=False,ignore_index=True)
-        .head(nb_max_relation_wiki_filter)
-    )
-    
-    df_entity_relation_filter = pd.concat([df_entity_relation_filter.assign(source="paper"),
-                                           df_entity_relation_wiki_filter.assign(source="Wikipedia")])
+        # Filter
+        df_entity_relation_wiki_filter = (
+            df_entity_relation_wiki.groupby(["type1", "entite1", "relation", "entite2", "type2"])
+            .aggregate(**{"num_phrase": ("num_phrase", list), "occurence": ("num_phrase", len)})
+            .reset_index()
+            .sort_values("occurence", ascending=False,ignore_index=True)
+            .head(nb_max_relation_wiki_filter)
+        )
+        
+        df_entity_relation_filter = pd.concat([df_entity_relation_filter.assign(source="paper"),
+                                            df_entity_relation_wiki_filter.assign(source="Wikipedia")])
 
-    # Clustering
-    embedding_relation = df_entity_relation_filter["relation"].apply(nlp.vocab.get_vector)
-    embedding_relation = npy.array([array for array in embedding_relation],dtype=float).T
-    kmeans = KMeans(n_clusters=min(nb_cluster,df_entity_relation_filter.shape[0]), random_state=0, n_init="auto").fit(npy.transpose(embedding_relation))
+        # Clustering
+        embedding_relation = df_entity_relation_filter["relation"].apply(nlp.vocab.get_vector)
+        embedding_relation = npy.array([array for array in embedding_relation],dtype=float).T
+        kmeans = KMeans(n_clusters=min(nb_cluster,df_entity_relation_filter.shape[0]), random_state=0, n_init="auto").fit(npy.transpose(embedding_relation))
 
-    df_entity_relation_filter["cluster"] = kmeans.labels_
-    color_cluster = get_N_HexCol(nb_cluster)
-    df_entity_relation_filter["color_cluster"] = df_entity_relation_filter["cluster"].map({i:color_cluster[i] for i in range(nb_cluster)} )
-
-
-    df_entity_relation_filter["color1"] = df_entity_relation_filter["type1"].map(ENT_COLOR)
-    df_entity_relation_filter["color2"] = df_entity_relation_filter["type2"].map(ENT_COLOR)
-    df_entity_relation_filter = df_entity_relation_filter.drop_duplicates(subset=["entite1","entite2"])
-    
-    return df_entity_relation_filter
+        df_entity_relation_filter["cluster"] = kmeans.labels_
+        color_cluster = get_N_HexCol(nb_cluster)
+        df_entity_relation_filter["color_cluster"] = df_entity_relation_filter["cluster"].map({i:color_cluster[i] for i in range(nb_cluster)} )
 
 
-df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster)
+        df_entity_relation_filter["color1"] = df_entity_relation_filter["type1"].map(ENT_COLOR)
+        df_entity_relation_filter["color2"] = df_entity_relation_filter["type2"].map(ENT_COLOR)
+        df_entity_relation_filter = df_entity_relation_filter.drop_duplicates(subset=["entite1","entite2"])
+        
+        return df_entity_relation_filter
+    else:
+        return None
+
+
+df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None)
 
 
 ######################################### Graphe
@@ -262,47 +277,50 @@ st.markdown("""<div> On représente les rélations entre entités par un graphe 
             
             unsafe_allow_html=True)
 
-nodes = []
-edges = []
-idnodes = []
-for i in range(df_entity_relation_filter.shape[0]):
-    if df_entity_relation_filter["entite1"].iloc[i] not in idnodes:
-        nodes.append( Node(id=df_entity_relation_filter["entite1"].iloc[i], 
-                    label=df_entity_relation_filter["entite1"].iloc[i], 
-                    size=15, 
-                    shape="square",
-                    color = df_entity_relation_filter["color1"].iloc[i]) 
-                )
-        idnodes.append(df_entity_relation_filter["entite1"].iloc[i] )
-    
-    if df_entity_relation_filter["entite2"].iloc[i] not in idnodes:
-        nodes.append( Node(id=df_entity_relation_filter["entite2"].iloc[i], 
-                    label=df_entity_relation_filter["entite2"].iloc[i], 
-                    size=15, 
-                    shape="square",
-                    color = df_entity_relation_filter["color2"].iloc[i]) 
-                )
-        idnodes.append(df_entity_relation_filter["entite2"].iloc[i] )
-    
-    edge_dashed = True if df_entity_relation_filter["source"].iloc[i] == "Wikipedia" else False
-    edge_width =  2+5*(df_entity_relation_filter["occurence"].iloc[i]-df_entity_relation_filter["occurence"].min())/(df_entity_relation_filter["occurence"].max()-df_entity_relation_filter["occurence"].min())
-    edges.append( Edge(
-        source=df_entity_relation_filter["entite1"].iloc[i],
-        label=df_entity_relation_filter["relation"].iloc[i], 
-        target=df_entity_relation_filter["entite2"].iloc[i], 
-        dashes = edge_dashed,
-        width = edge_width,
-        color = df_entity_relation_filter["color_cluster"].iloc[i]
-                    # **kwargs
+if df_entity_relation_filter is not None:
+    nodes = []
+    edges = []
+    idnodes = []
+    for i in range(df_entity_relation_filter.shape[0]):
+        if df_entity_relation_filter["entite1"].iloc[i] not in idnodes:
+            nodes.append( Node(id=df_entity_relation_filter["entite1"].iloc[i], 
+                        label=df_entity_relation_filter["entite1"].iloc[i], 
+                        size=15, 
+                        shape="square",
+                        color = df_entity_relation_filter["color1"].iloc[i]) 
+                    )
+            idnodes.append(df_entity_relation_filter["entite1"].iloc[i] )
+        
+        if df_entity_relation_filter["entite2"].iloc[i] not in idnodes:
+            nodes.append( Node(id=df_entity_relation_filter["entite2"].iloc[i], 
+                        label=df_entity_relation_filter["entite2"].iloc[i], 
+                        size=15, 
+                        shape="square",
+                        color = df_entity_relation_filter["color2"].iloc[i]) 
+                    )
+            idnodes.append(df_entity_relation_filter["entite2"].iloc[i] )
+        
+        edge_dashed = True if df_entity_relation_filter["source"].iloc[i] == "Wikipedia" else False
+        edge_width =  2+5*(df_entity_relation_filter["occurence"].iloc[i]-df_entity_relation_filter["occurence"].min())/(df_entity_relation_filter["occurence"].max()-df_entity_relation_filter["occurence"].min())
+        edges.append( Edge(
+            source=df_entity_relation_filter["entite1"].iloc[i],
+            label=df_entity_relation_filter["relation"].iloc[i], 
+            target=df_entity_relation_filter["entite2"].iloc[i], 
+            dashes = edge_dashed,
+            width = edge_width,
+            color = df_entity_relation_filter["color_cluster"].iloc[i]
+                        # **kwargs
+                        ) 
                     ) 
-                ) 
 
-config = Config(height=900, width=1000, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=False,collapsible=True)
+    config = Config(height=900, width=1000, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=False,collapsible=True)
 
-print("wsh")
-resu_graph = agraph(nodes=nodes, 
-        edges=edges, 
-        config=config)
+    print("wsh")
+    resu_graph = agraph(nodes=nodes, 
+            edges=edges, 
+            config=config)
+else:
+    resu_graph = None
 
 
 if resu_graph:

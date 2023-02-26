@@ -80,17 +80,9 @@ def filter_article(
     df_all_article: pd.DataFrame, source_filter: str, category_filter: str
 ) -> pd.DataFrame:
     # filtrer
-    if source_filter != "ALL":
-        df_article = df_all_article[
-            df_all_article["source"] == source_filter
-        ].reset_index(drop=True)
-    else:
-        df_article = deepcopy(df_all_article)
-
-    if category_filter != "ALL":
-        df_article = df_all_article[
-            df_all_article["category"] == category_filter
-        ].reset_index(drop=True)
+    source_filter = (df_all_article["source"] == source_filter) & (source_filter != "ALL") | (source_filter == "ALL")
+    category_filter = (df_all_article["category"] == category_filter) & (category_filter != "ALL") | (category_filter == "ALL")
+    df_article = df_all_article[(source_filter) & (category_filter)].reset_index(drop=True)
 
     return df_article
 

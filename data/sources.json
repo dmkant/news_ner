@@ -1,7 +1,13 @@
 {"Les Echos":{
     "Actualit\u00e9s valeurs": "https://services.lesechos.fr/rss/investir-actualites-valeurs.xml",
-    "Investir responsable": "https://services.lesechos.fr/rss/investir-responsable.xml",
-    "March\u00e9s et Indices": "https://services.lesechos.fr/rss/investir-marches-indices.xml",
-    "Placement": "https://services.lesechos.fr/rss/investir-placements.xml"
+    "Investir responsable": "https://services.lesechos.fr/rss/investir-responsable.xml"
+},
+"Le Monde":{
+    "La une Economie":"https://www.lemonde.fr/economie/rss_full.xml",
+    "Entreprise":"https://www.lemonde.fr/entreprises/rss_full.xml"
+},
+"France Info":{
+    "Tendance":"https://www.francetvinfo.fr/economie/tendances.rss",
+    "Entreprise":"https://www.francetvinfo.fr/economie/entreprises.rss"
 }
 }
