@@ -139,7 +139,15 @@ top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
 nb_max_relation_filter = top_col1.number_input("Les articles",value=60,min_value=5,step=1)
 nb_max_relation_wiki_filter = top_col2.number_input("Wikipedia",value=20,min_value=1,step=1)
-nb_cluster =  st.sidebar.number_input("Nombre de clusters regroupant les relations entre entités similaires",value=4,min_value=2,step=1)
+
+st.sidebar.markdown("</br>",unsafe_allow_html=True)
+
+
+top_container = st.sidebar.container()
+top_col1,top_col2 = top_container.columns([1,1])
+nb_cluster =  top_col1.number_input("Nombre de clusters de relations ",value=4,min_value=2,step=1)
+nb_max_multiple_relation =  top_col2.number_input("Nombre maximum de relations par couple d'entités",value=2,min_value=1,step=1)
+
 
 #######################################################################################################
 
@@ -289,7 +297,7 @@ st.markdown(f"""<div> On représente les rélations entre entités par un graphe
             unsafe_allow_html=True)
 
 @st.cache_resource
-def display_graph(df_entity_relation_filter):
+def display_graph(df_entity_relation_filter,nb_max_multiple_relation):
     nodes = []
     edges = []
     config = Config(height=900, width=1000, nodeHighlightBehavior=True, highlightColor="#F7A7A6", directed=False,collapsible=True)
@@ -319,13 +327,10 @@ def display_graph(df_entity_relation_filter):
             
             nb_rel1 = npy.sum([ed.to == df_entity_relation_filter["entite1"].iloc[i] and  ed.source == df_entity_relation_filter["entite2"].iloc[i] for ed in edges])
             nb_rel2 = npy.sum([ed.to == df_entity_relation_filter["entite2"].iloc[i] and  ed.source == df_entity_relation_filter["entite1"].iloc[i] for ed in edges])
-            if (nb_rel1 + nb_rel2) <= 3:
-                print("popo")
-                print(df_entity_relation_filter.head())
-                
+            
+            if nb_rel1 + nb_rel2 <= nb_max_multiple_relation - 1:
                 edge_dashed = True if df_entity_relation_filter["source"].iloc[i] == "Wikipedia" else False
                 edge_width =  2+7*(df_entity_relation_filter["occurence"].iloc[i]-min_occ)/(max_occ-min_occ) if max_occ != min_occ else 5
-                print("width",edge_width,edge_width == npy.nan,max_occ,min_occ)
                 
                 edges.append( Edge(
                     source=df_entity_relation_filter["entite1"].iloc[i],
@@ -342,13 +347,14 @@ def display_graph(df_entity_relation_filter):
     
     return nodes,edges,config
 
-nodes,edges,config = display_graph(df_entity_relation_filter)
+nodes,edges,config = display_graph(df_entity_relation_filter,nb_max_multiple_relation)
 
 resu_graph = agraph(nodes=nodes, 
                     edges=edges, 
                     config=config)
 
 @st.cache_resource
+
 def spacy_entity(resu_graph):
     if resu_graph:
         with st.expander("",expanded=True):
