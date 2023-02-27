@@ -57,8 +57,7 @@ def fetch_data():
 
 df_newspaper_article,df_wikipedia_article = fetch_data()
 
-st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entités Nommées dans la presse</h1>", unsafe_allow_html=True)
-st.subheader("Reconnaissance des Entités Nommées")
+
 # footer()
 
 footer="""<style>
@@ -102,6 +101,11 @@ st.markdown(
             <style>
                 .css-1vq4p4l {{
                     padding-top: 0rem;}} </style>''',unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entités Nommées dans la presse</h1>", unsafe_allow_html=True)
+# st.markdown("<h2>Reconnaissance des Entités Nommées</h2>", unsafe_allow_html=True)
+
+# st.subheader("Reconnaissance des Entités Nommées")
+
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
 st.sidebar.warning('Cette application est déployée sur un hébergeur gratuit => si vous modifiez trop filtres/widgets en même temps elle risque de planter ', icon="⚠️")
@@ -145,8 +149,8 @@ st.sidebar.markdown("</br>",unsafe_allow_html=True)
 
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
-nb_cluster =  top_col1.number_input("Nombre de clusters regroupant les relations entre entités similaires",value=4,min_value=2,step=1)
-nb_max_multiple_relation =  top_col2.number_input("Nombre maximum de relations par couple d'entités",value=2,min_value=1,step=1)
+nb_cluster =  st.sidebar.number_input("Nombre de clusters regroupant les relations entre entités similaires",value=4,min_value=2,step=1)
+nb_max_multiple_relation =  st.sidebar.number_input("Nombre maximum de relations par couple d'entités",value=2,min_value=1,step=1)
 
 
 #######################################################################################################
@@ -154,6 +158,8 @@ nb_max_multiple_relation =  top_col2.number_input("Nombre maximum de relations p
 @st.cache_resource
 def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
     my_bar = st.progress(0.1, text="Filtrer le corpus....")
+    st.markdown("<h2>Reconnaissance des Entités Nommées</h2>", unsafe_allow_html=True)
+
     df_article = filter_article(
         df_all_article=df_newspaper_article,
         source_filter=source_filter,
@@ -190,11 +196,13 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
         # Sent entity
         df_sent_entity = get_df_sent_entity(df_article=df_article)
         my_bar.progress(1, text="Done !")
-        my_bar.empty()
+        my_bar.progress(0, text="")
+        # my_bar.empty()
         
         return df_main_entity,df_sent_entity
     else:
-        my_bar.empty()
+        my_bar = st.progress(0, text="")
+        # my_bar.empty()
         return None,None
         
 
@@ -282,7 +290,9 @@ df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filt
 
 ######################################### Graphe
 
-st.subheader("Extraction des Relations")
+# st.subheader("Extraction des Relations")
+st.markdown("<h2>Extraction des Relations</h2>", unsafe_allow_html=True)
+
 st.markdown(f"""<div> On représente les rélations entre entités par un graphe où les noeuds sont les entités et les arrètes les relations. 
             La couleur de noeuds correspond à leur type (<span style="color:#4D9DE0;font-weight: bold;">PER</span>, <span style="font-weight: bold;color:#E15554">LOC</span> et <span style="font-weight: bold;color:#E1BC29">ORG</span>).
             Concernant les arrêtes: 
