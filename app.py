@@ -104,7 +104,7 @@ st.markdown(
                     padding-top: 0rem;}} </style>''',unsafe_allow_html=True)
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
-st.sidebar.warning('Cette application est déployer sur un hébergeur gratuit => si vous modifiez trop filtres/widgets en même temps elle risque de planter ', icon="⚠️")
+st.sidebar.warning('Cette application est déployée sur un hébergeur gratuit => si vous modifiez trop filtres/widgets en même temps elle risque de planter ', icon="⚠️")
 st.sidebar.markdown("<h4>Filter:</h4>",unsafe_allow_html=True)
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
@@ -192,7 +192,6 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
 
 df_main_entity,df_sent_entity = display_main_kpi(source_filter,category_filter,nb_max_entite_filter)
 df_sent_entity_is_not_None = df_sent_entity is not None
-print(df_main_entity)
 
 @st.cache_resource
 def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape):
