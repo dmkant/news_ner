@@ -97,8 +97,14 @@ top: 10%;
 """
 st.markdown(footer,unsafe_allow_html=True)
 
+st.markdown(
+            f'''
+            <style>
+                .css-1vq4p4l {{
+                    padding-top: 0rem;}} </style>''',unsafe_allow_html=True)
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
+st.sidebar.warning('Cette application est déployer sur un hébergeur gratuit => si vous modifiez trop filtres/widgets en même temps elle risque de planter ', icon="⚠️")
 st.sidebar.markdown("<h4>Filter:</h4>",unsafe_allow_html=True)
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
@@ -112,7 +118,7 @@ category_filter = top_col2.selectbox(
     ["ALL"] + list(df_newspaper_article["category"].unique())
 )
 
-nb_max_entite_filter = st.sidebar.number_input("Nombre maximum d'entités par type",value=30,min_value=5,step=1)
+nb_max_entite_filter = st.sidebar.number_input("Nombre maximum d'entités par type",value=20,min_value=5,step=1)
 
 st.sidebar.markdown("<hr></hr>", unsafe_allow_html=True)
 st.sidebar.markdown("<h4>Filter le type de:</h4>",unsafe_allow_html=True)
