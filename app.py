@@ -145,7 +145,7 @@ st.sidebar.markdown("</br>",unsafe_allow_html=True)
 
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
-nb_cluster =  top_col1.number_input("Nombre de clusters de relations ",value=4,min_value=2,step=1)
+nb_cluster =  top_col1.number_input("Nombre de clusters regroupant les relations entre entités similaires",value=4,min_value=2,step=1)
 nb_max_multiple_relation =  top_col2.number_input("Nombre maximum de relations par couple d'entités",value=2,min_value=1,step=1)
 
 
