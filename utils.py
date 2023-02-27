@@ -50,9 +50,12 @@ def article_already_present(df_article: pd.DataFrame, item) -> bool:
     )
 
 
-def ajout_article(dict_all_source: dict, df_article: pd.DataFrame) -> pd.DataFrame:
+def ajout_article(dict_all_source: dict, df_article: pd.DataFrame,my_bar) -> pd.DataFrame:
     dict_article = {}
+    i = 1
     for source_name, dict_source in dict_all_source.items():
+        my_bar.progress(0.4*(i/len(dict_all_source)), text=f"Récuperation des flux RSS - Source: {source_name}")
+        i += 1
         for categorie, url in dict_source.items():
             print(f"Categorie '{categorie}'")
             data = fp.parse(url)
@@ -74,7 +77,7 @@ def ajout_article(dict_all_source: dict, df_article: pd.DataFrame) -> pd.DataFra
                         pass
     df_article = pd.DataFrame(dict_article).T.reset_index()
     df_article.rename(columns={"index": "url"}, inplace=True)
-    return df_article
+    return df_article,my_bar
 
 def filter_article(
     df_all_article: pd.DataFrame, source_filter: str, category_filter: str
@@ -118,11 +121,14 @@ def get_main_entity(
 
 
 ###################### Add wikipedia 
-def ajout_wikipedia_article(df_main_entity: pd.DataFrame) -> pd.DataFrame:
+def ajout_wikipedia_article(df_main_entity: pd.DataFrame,my_bar) -> pd.DataFrame:
     list_article = []
     wikipedia.set_lang("fr")
-
-    for entite_lemma in tqdm(df_main_entity[df_main_entity["type"]!="MISC"]["lemma"]):
+    df_tmp = df_main_entity[df_main_entity["type"]!="MISC"]
+    i = 1
+    for entite_lemma in tqdm(df_tmp["lemma"]):
+        my_bar.progress(0.5 + 0.5*(i/len(df_tmp)), text=f"Ajout de pages Wikipedia...")
+        i += 1
         try:
             wiki_search = wikipedia.search(entite_lemma,results=1)
             if len(wiki_search) > 0 :
@@ -136,7 +142,7 @@ def ajout_wikipedia_article(df_main_entity: pd.DataFrame) -> pd.DataFrame:
         except:
             pass
     df_article = pd.DataFrame(list_article)
-    return df_article
+    return df_article,my_bar
 
 ###################### sentences entities
 def get_df_sent_entity(df_article: pd.DataFrame) -> pd.DataFrame:
