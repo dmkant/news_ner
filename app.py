@@ -293,9 +293,6 @@ def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filte
                 df_entity_relation_filter["color1"] = df_entity_relation_filter["type1"].map(ENT_COLOR)
                 df_entity_relation_filter["color2"] = df_entity_relation_filter["type2"].map(ENT_COLOR)
                 
-                # df_entity_relation_filter[df_entity_relation_filter["entite1"] == "leAsie de leest"] = "l Asie de l Est"
-                # df_entity_relation_filter[df_entity_relation_filter["entite2"] == "leAsie de leest"] = "l Asie de l Est"
-                # df_entity_relation_filter[df_entity_relation_filter["relation"].str.lower() == "amazon"] = "societes"
                 
                 resu = df_entity_relation_filter
     return resu
