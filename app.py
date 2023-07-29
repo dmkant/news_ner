@@ -7,7 +7,7 @@ from streamlit_agraph import agraph, Node, Edge, Config
 
 ENT_COLOR = {"PER":"#4D9DE0","LOC":"#E15554","ORG":"#E1BC29","MISC":"#3BB273"}
 
-st.set_page_config(layout="wide",page_title='ENSAI - NER Project')
+st.set_page_config(layout="wide",page_title='NER - Economic Newspaper')
 
 nlp = spacy.load("fr_core_news_md")
 
