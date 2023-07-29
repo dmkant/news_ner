@@ -91,7 +91,7 @@ top: 10%;
 <img src="https://upload.wikimedia.org/wikipedia/fr/thumb/c/c0/Logo_ENSAI_2014.svg/1280px-Logo_ENSAI_2014.svg.png" style='width: 7%;top: 10%;
     right: 13px;
     position: absolute;'>
-<p>Developpée par <a style='display: block; text-align: center;' href="https://www.dominos.fr/"> Le Bayon et Miccinilli </a></p>
+<p>Developpée par <a style='display: block; text-align: center;' href="https://www.linkedin.com/in/hugo-miccinilli/"> Hugo Miccinilli </a></p>
 </div>
 """
 st.markdown(footer,unsafe_allow_html=True)
@@ -108,7 +108,7 @@ st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entité
 
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
-st.sidebar.warning('Cette application est déployée sur un hébergeur gratuit => si vous modifiez trop filtres/widgets en même temps elle risque de planter ', icon="⚠️")
+st.sidebar.warning('Cette application est déployée sur un hébergeur gratuit => si vous modifiez trop de filtres/widgets en même temps elle risque de planter 😱', icon="⚠️")
 st.sidebar.markdown("<h4>Filter:</h4>",unsafe_allow_html=True)
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
@@ -122,7 +122,7 @@ category_filter = top_col2.selectbox(
     ["ALL"] + list(df_newspaper_article["category"].unique())
 )
 
-nb_max_entite_filter = st.sidebar.number_input("Nombre maximum d'entités par type",value=20,min_value=5,step=1)
+nb_max_entite_filter = st.sidebar.number_input("Nombre maximum d'entités par type",value=10,min_value=5,step=1)
 
 st.sidebar.markdown("<hr></hr>", unsafe_allow_html=True)
 st.sidebar.markdown("<h4>Filter le type de:</h4>",unsafe_allow_html=True)
@@ -172,11 +172,20 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
 
 
     top_col1.write("Sources des articles:")
-    for _ in range(2):
+    for _ in range(3):
         for img_file in os.listdir("data/img/sources"):
             top_col1.image(f"data/img/sources/{img_file}",use_column_width="always")
 
     if df_article.shape[0] > 0:
+        top_col2.columns([1,5])[1].markdown(f""" <h4>Types d'entités nommées</h4> 
+                          <ul>
+                          <li> <span style='font-weight: bold;color:{ENT_COLOR['PER']}'>PER</span>: Personnes </li>
+                          <li> <span style='font-weight: bold;color:{ENT_COLOR['ORG']}'>ORG</span>: Organisations </li>
+                          <li> <span style='font-weight: bold;color:{ENT_COLOR['LOC']}'>LOC</span>: Lieux </li>
+                          <li> <span style='font-weight: bold;color:{ENT_COLOR['MISC']}'>MISC</span>: Autres </li>
+                          </ul>
+                          """
+            ,unsafe_allow_html=True)
         my_bar.progress(0.15, text=f"Récupère les {nb_max_entite_filter} entités principales par type....")
         df_main_entity = get_main_entity( N_most_common=nb_max_entite_filter, df_article=df_article)
         fig = px.bar(
@@ -189,7 +198,7 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
             height=900,
             title="Occurence des entités dans les articles selon leur type",
         )
-        top_col2.plotly_chart(fig,use_container_width=True)
+        top_col2.columns([1,10])[1].plotly_chart(fig,use_container_width=True)
 
         df_article = pd.concat([df_article, df_wikipedia_article])
 
@@ -208,8 +217,9 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
 
 df_main_entity,df_sent_entity = display_main_kpi(source_filter,category_filter,nb_max_entite_filter)
 df_sent_entity_is_not_None = df_sent_entity is not None
+print(df_sent_entity)
 
-@st.cache_resource
+@st.cache_data
 def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape):
     # Relations Journeaux
     # Get Entity
@@ -223,11 +233,11 @@ def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filte
         )
 
         if df_entity_relation_newspaper.shape[0] > 0:
-            df_entity_relation_newspaper = df_entity_relation_newspaper[
-                (df_entity_relation_newspaper["entite1"].isin(df_main_entity["lemma"]))
-                & (df_entity_relation_newspaper["entite2"].isin(df_main_entity["lemma"]))
-                & (~df_entity_relation_newspaper["relation"].isin(df_main_entity["lemma"]))
-            ]
+            # df_entity_relation_newspaper = df_entity_relation_newspaper[
+            #     (df_entity_relation_newspaper["entite1"].isin(df_main_entity["lemma"]))
+            #     & (df_entity_relation_newspaper["entite2"].isin(df_main_entity["lemma"]))
+            #     & (~df_entity_relation_newspaper["relation"].isin(df_main_entity["lemma"]))
+            # ]
             
             if df_entity_relation_newspaper.shape[0] > 0:
                 # Filter
@@ -286,14 +296,14 @@ def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filte
 
 df_sent_entity_shape = df_sent_entity.shape if df_sent_entity is not None else (0,0)
 df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape)
-
+print(df_entity_relation_filter)
 
 ######################################### Graphe
 
 # st.subheader("Extraction des Relations")
 st.markdown("<h2>Extraction des Relations</h2>", unsafe_allow_html=True)
 
-st.markdown(f"""<div> On représente les rélations entre entités par un graphe où les noeuds sont les entités et les arrètes les relations. 
+st.markdown(f"""<div> On représente les relations entre entités par un graphe où les noeuds sont les entités et les arrètes les relations. 
             La couleur de noeuds correspond à leur type (<span style="color:#4D9DE0;font-weight: bold;">PER</span>, <span style="font-weight: bold;color:#E15554">LOC</span> et <span style="font-weight: bold;color:#E1BC29">ORG</span>).
             Concernant les arrêtes: 
             <ul> 
@@ -301,7 +311,7 @@ st.markdown(f"""<div> On représente les rélations entre entités par un graphe
             <li> L'éppaisseur correspond à l'occurence de la relation dans le corpus</li> 
             <li> La couleur correpond au cluster où sont regrouper des relations similaire parmi <span style="font-weight: bold;">{nb_cluster} cluster(s)</span></li> 
             </ul>
-            <span style="font-weight: bold;">En cliquant sur un noeud, on accède aux différentes sources utilisé pour son extraction.</span>
+            <span style="font-weight: bold;">En cliquant sur un noeud, on accède aux différentes sources utilisées pour son extraction.</span>
             </div>""",
             
             unsafe_allow_html=True)

@@ -17,6 +17,7 @@ import streamlit as st
 from sklearn.cluster import KMeans
 import wikipedia
 import colorsys
+from typing import List
 
 def get_html(html: str):
     """Convert HTML so it can be rendered."""
@@ -90,6 +91,12 @@ def filter_article(
     return df_article
 
 ############ Get entities
+def remove_prefix(text:str, prefixes_to_remove:List[str])->str:
+    for prefix in prefixes_to_remove:
+        if text.startswith(prefix):
+            return text[len(prefix):]
+    return text
+
 def get_main_entity(
     df_article: pd.DataFrame ,N_most_common: int = 20
 ) -> pd.DataFrame:
@@ -107,6 +114,8 @@ def get_main_entity(
         ),
         columns=["url", "entity", "type", "lemma"],
     )
+    df_entity = df_entity[~df_entity["lemma"].isin( ["le","la", "les","à","aux","du ","de","des"])]
+    df_entity['lemma'] = df_entity['lemma'].str.lower().apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
 
     df_main_entity = (
         df_entity[["type", "lemma"]]
@@ -145,6 +154,17 @@ def ajout_wikipedia_article(df_main_entity: pd.DataFrame,my_bar) -> pd.DataFrame
     return df_article,my_bar
 
 ###################### sentences entities
+def remove_prefixes_in_list(string_list:List[str], prefixes_to_remove:List[str]) -> List[str]:
+    cleaned_list = []
+    for text in string_list:
+        text = text.lower()
+        for prefix in prefixes_to_remove:
+            if text.startswith(prefix):
+                text = text[len(prefix):]
+                break
+        cleaned_list.append(text)
+    return cleaned_list
+
 def get_df_sent_entity(df_article: pd.DataFrame) -> pd.DataFrame:
     list_sent = [
         {
@@ -161,6 +181,9 @@ def get_df_sent_entity(df_article: pd.DataFrame) -> pd.DataFrame:
     ]
     
     df = pd.DataFrame(list_sent)
+    print("WSH")
+    
+    df['entity_lemma'] = df['entity_lemma'].apply(lambda x: remove_prefixes_in_list(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
     return df
 
 ####################### Entity relation
@@ -236,5 +259,11 @@ def get_entity_relation(
                     )
 
     df_entity_relation = pd.DataFrame(list_entity_relation)
+    df_entity_relation['entite1'] = df_entity_relation['entite1'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
+    df_entity_relation['entite2'] = df_entity_relation['entite2'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
+    df_entity_relation['relation'] = df_entity_relation['relation'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
+    df_entity_relation[df_entity_relation["entite1"] == "leAsie de leEst"] = "l'Asie de l'Est"
+    df_entity_relation[df_entity_relation["entite2"] == "leAsie de leEst"] = "l'Asie de l'Est"
+    df_entity_relation[df_entity_relation["relation"].str.lower() == "amazon"] = "sociétés"
 
     return df_entity_relation

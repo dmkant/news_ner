@@ -66,7 +66,7 @@ def layout(*args):
 def footer():
     myargs = [
         "Made  by &nbsp;",
-        link("https://www.dominos.fr/", "Le Bayon and Miccinilli"),
+        link("https://www.dominos.fr/", "Hugo Miccinilli"),
         br(),
         link("https://www.insa-rennes.fr/", image('https://www.groupe-hli.com/wp-content/uploads/2014/11/logo_ensai.png'),),
     ]
