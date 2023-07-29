@@ -262,8 +262,5 @@ def get_entity_relation(
     df_entity_relation['entite1'] = df_entity_relation['entite1'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
     df_entity_relation['entite2'] = df_entity_relation['entite2'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
     df_entity_relation['relation'] = df_entity_relation['relation'].apply(lambda x: remove_prefix(x, ["le ","la ", "les ","à ","aux ","du ","de ","des "]))
-    df_entity_relation[df_entity_relation["entite1"] == "leAsie de leEst"] = "l'Asie de l'Est"
-    df_entity_relation[df_entity_relation["entite2"] == "leAsie de leEst"] = "l'Asie de l'Est"
-    df_entity_relation[df_entity_relation["relation"].str.lower() == "amazon"] = "sociétés"
 
     return df_entity_relation

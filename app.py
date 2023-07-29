@@ -100,8 +100,14 @@ st.markdown(
             f'''
             <style>
                 .css-1vq4p4l {{
-                    padding-top: 0rem;}} </style>''',unsafe_allow_html=True)
-st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entités Nommées dans la presse</h1>", unsafe_allow_html=True)
+                    padding-top: 0rem;
+                    }}
+                ..css-k1ih3n{{
+                    padding-top: 0rem;
+                    }}
+            </style>'''
+            ,unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entités Nommées </br> dans la presse économique</h1>", unsafe_allow_html=True)
 # st.markdown("<h2>Reconnaissance des Entités Nommées</h2>", unsafe_allow_html=True)
 
 # st.subheader("Reconnaissance des Entités Nommées")
@@ -141,7 +147,7 @@ type_entite2_filter = top_col2.selectbox(
 st.sidebar.markdown("<h4>Nombre maximum de relations issues de:</h4>",unsafe_allow_html=True)
 top_container = st.sidebar.container()
 top_col1,top_col2 = top_container.columns([1,1])
-nb_max_relation_filter = top_col1.number_input("Les articles",value=60,min_value=5,step=1)
+nb_max_relation_filter = top_col1.number_input("Les articles",value=15,min_value=5,step=1)
 nb_max_relation_wiki_filter = top_col2.number_input("Wikipedia",value=20,min_value=1,step=1)
 
 st.sidebar.markdown("</br>",unsafe_allow_html=True)
@@ -217,7 +223,6 @@ def display_main_kpi(source_filter,category_filter,nb_max_entite_filter):
 
 df_main_entity,df_sent_entity = display_main_kpi(source_filter,category_filter,nb_max_entite_filter)
 df_sent_entity_is_not_None = df_sent_entity is not None
-print(df_sent_entity)
 
 @st.cache_data
 def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape):
@@ -291,12 +296,15 @@ def display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filte
                 df_entity_relation_filter["color1"] = df_entity_relation_filter["type1"].map(ENT_COLOR)
                 df_entity_relation_filter["color2"] = df_entity_relation_filter["type2"].map(ENT_COLOR)
                 
+                # df_entity_relation_filter[df_entity_relation_filter["entite1"] == "leAsie de leest"] = "l Asie de l Est"
+                # df_entity_relation_filter[df_entity_relation_filter["entite2"] == "leAsie de leest"] = "l Asie de l Est"
+                # df_entity_relation_filter[df_entity_relation_filter["relation"].str.lower() == "amazon"] = "societes"
+                
                 resu = df_entity_relation_filter
     return resu
 
 df_sent_entity_shape = df_sent_entity.shape if df_sent_entity is not None else (0,0)
 df_entity_relation_filter = display_entite(type_entite1_filter,type_entite2_filter,nb_max_relation_filter,nb_max_relation_wiki_filter,nb_cluster,df_sent_entity_is_not_None,df_sent_entity_shape)
-print(df_entity_relation_filter)
 
 ######################################### Graphe
 
