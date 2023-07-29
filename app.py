@@ -108,9 +108,6 @@ st.markdown(
             </style>'''
             ,unsafe_allow_html=True)
 st.markdown("<h1 style='text-align: center; color: #E15554;'>Analyse des Entités Nommées </br> dans la presse économique</h1>", unsafe_allow_html=True)
-# st.markdown("<h2>Reconnaissance des Entités Nommées</h2>", unsafe_allow_html=True)
-
-# st.subheader("Reconnaissance des Entités Nommées")
 
 ################################################################################################# SideBar
 st.sidebar.title("Paramètres")
